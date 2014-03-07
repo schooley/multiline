@@ -6,18 +6,26 @@
 	MIT License
 */
 (function () {
-	'use strict';
+	'use strict'; 
 
-	// start matching after: comment start block => optional whitespace => newline
-	// stop matching before: last newline => optional whitespace => comment end block
-	var reCommentContents = /\/\*\s*(?:\r\n|\n)([\s\S]*?)(?:\r\n|\n)\s*\*\//;
+	/* match all multi-line comments
+	 * matches oddities such as function /* comment *\/ () {}
+	 */
+	var reCommentContents = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
+
+	/* match YUI (!) / Closure Compiler (@preserve) preserve syntax or default (/*)
+	 * matches pre-minified and post-minified scripts 
+	 * start matching after: comment start block => optional whitespace => newline
+	 * stop matching before: last newline => optional whitespace => comment end block
+	 */
+	var reCommentPreserve = /(?:^\/\*!?|@preserve)(?:\s*\r?\n)([\s\S]*)(?:\r?\n\s*\*\/$)/;
 
 	var multiline = function (fn) {
-		if (typeof fn !== 'function') {
+		if (typeof fn !== 'function')
 			throw new TypeError('Expected a function.');
-		}
-
-		return reCommentContents.exec(fn.toString())[1];
+		if (fn.toString().match(reCommentContents) == null)
+			return '';
+		return (RegExp.lastMatch.match(reCommentPreserve) || [])[1] || '';
 	};
 
 	if (typeof module !== 'undefined' && module.exports) {
